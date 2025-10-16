@@ -1,0 +1,36 @@
+# =================================================================================
+# Render Blueprint for the 2048 Spring Boot Game
+#
+# This file defines the infrastructure for our application. It tells Render how to
+# build and deploy our service and attach persistent storage for the H2 database.
+# =================================================================================
+
+services:
+  # This is our main web application.
+  - type: web
+    name: game2048
+    # Use 'docker' to tell Render to build the image from our Dockerfile.
+    env: docker
+    # The 'main' branch will be automatically deployed on every push.
+    autoDeploy: true
+    # Configure the health check to ensure the service is running before
+    # routing traffic to it. Spring Boot Actuator could also be used here.
+    healthCheck:
+      path: /
+      initialDelaySeconds: 30
+    # Link the web service to the persistent disk defined below.
+    disks:
+      - name: game-data
+        # This mountPath MUST match the location of your database file.
+        # Our Dockerfile has WORKDIR /app and the H2 URL is jdbc:h2:file:./data/...
+        # So the correct path inside the container is /app/data.
+        mountPath: /app/data
+    # You can start on the free plan and scale up as needed.
+    plan: free
+
+# A persistent disk is required because the application uses a file-based H2 database.
+# Without this, the database file would be lost on every restart or deploy.
+disks:
+  - name: game-data
+    # The smallest available disk size, more than enough for our H2 database.
+    sizeGB: 1
